@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 
 User = get_user_model()
 
@@ -106,7 +107,23 @@ class RecipeIngredient(models.Model):
         related_name='ingredient',
         verbose_name='Ингредиент',
     )
-    amount = models.FloatField(verbose_name='Кол-во')
+    amount = models.FloatField(
+        verbose_name='Кол-во',
+        validators=(
+            MinValueValidator(
+                0.5,
+                message='Минимальное количество ингредиентов!',
+            ),
+        )
+
+    )
+
+    class Meta:
+        verbose_name = 'Количество ингредиента'
+        verbose_name_plural = 'Количество ингредиентов'
+
+    def __str__(self):
+        return f'{self.recipe} -> {self.ingredient}'
 
 
 class Follow(models.Model):
@@ -145,8 +162,9 @@ class ShoppingList(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
     )
-    recipe = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
+        on_delete=models.CASCADE,
         verbose_name='Рецепт',
     )
     pub_date = models.DateTimeField(
@@ -159,6 +177,12 @@ class ShoppingList(models.Model):
         verbose_name_plural = 'Корзины'
         default_related_name = 'shopping_list'
         ordering = ('pub_date',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='Unique_ShoppingList'
+            ),
+        )
 
     def __str__(self):
         return f'Пользователь: {self.user} купил {self.recipe}'
@@ -171,8 +195,9 @@ class Favorite(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
     )
-    recipe = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
+        on_delete=models.CASCADE,
         verbose_name='Рецепт',
     )
     pub_date = models.DateTimeField(
@@ -185,6 +210,12 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранные'
         default_related_name = 'favorite'
         ordering = ('pub_date',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='Unique_Favorite'
+            ),
+        )
 
     def __str__(self):
         return f'Пользователь: {self.user} добавил {self.recipe}'
