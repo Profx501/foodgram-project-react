@@ -9,17 +9,17 @@ class Tag(models.Model):
     """Модель для хранения информации о тэге."""
     name = models.CharField(
         verbose_name='Название Тэга',
-        max_length=150,
+        max_length=200,
         unique=True,
     )
     color = models.CharField(
         verbose_name='Цвет',
-        max_length=25,
+        max_length=7,
         unique=True,
     )
     slug = models.SlugField(
         verbose_name='Идентификатор',
-        max_length=150,
+        max_length=200,
         unique=True,
     )
 
@@ -36,12 +36,12 @@ class Ingredient(models.Model):
     """Модель для хранения информации о ингредиенте."""
     name = models.CharField(
         verbose_name='Название ингредиента',
-        max_length=150,
+        max_length=200,
         unique=True,
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=150,
+        max_length=200,
     )
 
     class Meta:
@@ -69,6 +69,12 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
+        validators=(
+            MinValueValidator(
+                1,
+                message='Минимальное время приготовления 1 минута.',
+            ),
+        )
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -111,8 +117,8 @@ class RecipeIngredient(models.Model):
         verbose_name='Кол-во',
         validators=(
             MinValueValidator(
-                0.5,
-                message='Минимальное количество ингредиентов!',
+                0,
+                message='Минимальное количество ингредиентов 0!',
             ),
         )
 

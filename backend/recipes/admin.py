@@ -58,6 +58,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     list_per_page = 10
     search_fields = ('name',)
+    ordering = ('pk',)
 
 
 @admin.register(Favorite)
