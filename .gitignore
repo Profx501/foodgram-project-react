@@ -127,6 +127,22 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.vscode
+
+media/
+.media
 
 # .idea
 .idea
+
+# FRONTEND
+
+# dependencies
+frontend/node_modules
+/.pnp
+.pnp.js
+
+# testing
+
+
+# production
