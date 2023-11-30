@@ -2,8 +2,17 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import Tag, Ingredient, Recipe, User, RecipeIngredient
+from recipes.models import (
+    Tag,
+    Ingredient,
+    Recipe,
+    User,
+    RecipeIngredient,
+    ShoppingList,
+    Favorite,
+)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -61,6 +70,18 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
     def get_amount(self, obj):
         ingredients = RecipeIngredient.objects.filter(ingredient=obj)
         return ingredients[0].amount
+
+
+class RecipeInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
 
 
 class RecipelistSerializer(serializers.ModelSerializer):
@@ -162,3 +183,36 @@ class RecipeSerializer(serializers.ModelSerializer):
         if isinstance(instance, Recipe):
             serializer = RecipelistSerializer(instance)
         return serializer.data
+
+
+class ShoppingListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingList
+        fields = (
+            'user',
+            'recipe',
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingList.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен!'
+
+            )
+        ]
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен!'
+
+            )
+        ]
