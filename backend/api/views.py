@@ -1,17 +1,16 @@
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django.db.models.aggregates import Sum
-from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
-from rest_framework import viewsets
+from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated,
 )
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
 
 from recipes.models import (
     Tag,
@@ -22,6 +21,7 @@ from recipes.models import (
     User,
     Follow,
 )
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthor
 from .serializers import (
     TagSerializer,
@@ -35,11 +35,11 @@ from .serializers import (
     FollowSerializer,
     SubscriptionsSerializer,
 )
-from .filters import IngredientFilter, RecipeFilter
 from .utils import get_pdf
 
 
 class UserViewSet(DjoserUserViewSet):
+    """ViewSet для модели User."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'delete', 'patch']
@@ -47,18 +47,20 @@ class UserViewSet(DjoserUserViewSet):
     @action(
         ['GET'],
         detail=False,
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
     )
     def me(self, request):
+        """Отображает информацию о себе."""
         serializer = UserSerializer(request.user)
         return Response(data=serializer.data)
 
     @action(
         ['POST', 'DELETE'],
         detail=True,
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
     )
     def subscribe(serf, request, id):
+        """Добавление и удаление из подписок."""
         following = get_object_or_404(User, id=id)
         if request.method == 'POST':
             serializer = FollowSerializer(
@@ -86,6 +88,7 @@ class UserViewSet(DjoserUserViewSet):
         detail=False,
     )
     def subscriptions(self, request):
+        """Отображение списка подсписок."""
         subscriptions = User.objects.filter(
                 following__user=request.user.id
             )
@@ -111,12 +114,14 @@ class UserViewSet(DjoserUserViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для модели Tag."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для модели Ingredient."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -126,6 +131,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """ViewSet для модели Recipe."""
     queryset = Recipe.objects.all()
     http_method_names = ['get', 'post', 'delete', 'patch']
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthor)
@@ -134,9 +140,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
+        """Создаем рецепт.Присваеваем текущего пользователя."""
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
+        """Выбор сериализатора для разных запросов."""
         if self.action == 'list':
             return RecipelistSerializer
         return RecipeSerializer
@@ -146,6 +154,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
     )
     def shopping_cart(self, request, pk):
+        """Добавление и удаление рецепта из списка покупок."""
         if request.method == 'POST':
             try:
                 recipe = Recipe.objects.get(pk=pk)
@@ -167,7 +176,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         try:
             shopping_list = ShoppingList.objects.get(
                 user=request.user,
-                recipe=recipe
+                recipe=recipe,
             )
         except ObjectDoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -179,6 +188,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
     )
     def favorite(self, request, pk):
+        """Добавление и удаление рецепта из избранного."""
         if request.method == 'POST':
             try:
                 recipe = Recipe.objects.get(pk=pk)
@@ -207,6 +217,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
     )
     def download_shopping_cart(self, request):
+        """Загрузка ингрединетов из списка покупок в виде pdf."""
         ingredient_list = ShoppingList.objects.filter(
             user=request.user
         ).values(

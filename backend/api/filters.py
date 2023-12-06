@@ -4,7 +4,10 @@ from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
-
+    """
+    Позволяет фильтровать объекты модели Ingredient
+    по полю name.
+    """
     class Meta:
         model = Ingredient
         fields = {
@@ -13,7 +16,10 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-
+    """
+    Позволяет фильтровать объекты модели Recipe
+    по полю author, is_favorited, is_in_shopping_cart.
+    """
     def filter_is_favorited(self, queryset, name, value):
         if self.request.user.is_authenticated:
             return queryset.filter(favorite__user=self.request.user)
