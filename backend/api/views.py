@@ -90,8 +90,8 @@ class UserViewSet(DjoserUserViewSet):
     def subscriptions(self, request):
         """Отображение списка подсписок."""
         subscriptions = User.objects.filter(
-                following__user=request.user.id
-            )
+            following__user=request.user.id
+        )
         limit = self.request.GET.get('limit')
         if limit is not None:
             subscriptions = User.objects.filter(
@@ -106,10 +106,10 @@ class UserViewSet(DjoserUserViewSet):
             )
             return self.get_paginated_response(serializer.data)
         serializer = SubscriptionsSerializer(
-                subscriptions,
-                many=True,
-                context={'request': request},
-            )
+            subscriptions,
+            many=True,
+            context={'request': request},
+        )
         return Response(serializer.data)
 
 
