@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -8,7 +9,13 @@ def get_pdf(ingredient_list):
     """Создает и заполняет pdf file."""
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="file.pdf"'
-    pdfmetrics.registerFont(TTFont('Times', 'times.ttf', 'UTF-8'))
+    pdfmetrics.registerFont(
+        TTFont(
+            'Times',
+            f'{settings.BASE_DIR}/fonts/timesnewromanpsmt.ttf',
+            'UTF-8',
+        )
+    )
     p = canvas.Canvas(response)
     p.setFont('Times', 25)
     p.drawString(150, 800, 'Список Ингредиентов.')
