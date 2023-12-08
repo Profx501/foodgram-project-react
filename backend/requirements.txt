@@ -37,3 +37,4 @@ typing_extensions==4.8.0
 uritemplate==4.1.1
 urllib3==2.1.0
 webcolors==1.11.1
+flake8==6.1.0
