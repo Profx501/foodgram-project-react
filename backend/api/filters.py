@@ -8,11 +8,11 @@ class IngredientFilter(filters.FilterSet):
     Позволяет фильтровать объекты модели Ingredient
     по полю name.
     """
+    name = filters.CharFilter(lookup_expr='istartswith')
+
     class Meta:
         model = Ingredient
-        fields = {
-            'name': ['exact', 'icontains', 'startswith'],
-        }
+        fields = ('name',)
 
 
 class RecipeFilter(filters.FilterSet):

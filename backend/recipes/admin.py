@@ -30,6 +30,11 @@ class TagAdmin(admin.ModelAdmin):
     list_filter = ('name',)
 
 
+class RecipeIngredientInline(admin.StackedInline):
+    model = RecipeIngredient
+    min_num = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
@@ -38,6 +43,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'author',
         'count_favorite',
     )
+    inlines = (RecipeIngredientInline, )
 
     list_filter = ('author', 'name', 'tags')
     list_per_page = 10

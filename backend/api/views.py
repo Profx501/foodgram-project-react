@@ -149,6 +149,31 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipelistSerializer
         return RecipeSerializer
 
+    def add_obj(self, serializer_class, request, pk):
+        try:
+            recipe = Recipe.objects.get(pk=pk)
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializer_class(
+            data={'user': request.user.id, 'recipe': recipe.id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        recipe_serializer = RecipeInfoSerializer(recipe)
+        return Response(
+            data=recipe_serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def remove_obj(self, model, request, pk):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        try:
+            item = model.objects.get(user=request.user, **{'recipe': recipe})
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
         ['POST', 'DELETE'],
         detail=True,
@@ -156,32 +181,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk):
         """Добавление и удаление рецепта из списка покупок."""
         if request.method == 'POST':
-            try:
-                recipe = Recipe.objects.get(pk=pk)
-            except ObjectDoesNotExist:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            serializer = ShoppingListSerializer(
-                data={'user': request.user.id, 'recipe': recipe.id}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            recipe_shopping_list_serializer = RecipeInfoSerializer(recipe)
-            return Response(
-                data=recipe_shopping_list_serializer.data,
-                status=status.HTTP_201_CREATED,
-
-            )
-
-        recipe = get_object_or_404(Recipe, pk=pk)
-        try:
-            shopping_list = ShoppingList.objects.get(
-                user=request.user,
-                recipe=recipe,
-            )
-        except ObjectDoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        shopping_list.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return self.add_obj(ShoppingListSerializer, request, pk)
+        return self.remove_obj(ShoppingList, request, pk)
 
     @action(
         ['POST', 'DELETE'],
@@ -190,27 +191,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk):
         """Добавление и удаление рецепта из избранного."""
         if request.method == 'POST':
-            try:
-                recipe = Recipe.objects.get(pk=pk)
-            except ObjectDoesNotExist:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            serializer = FavoriteSerializer(
-                data={'user': request.user.id, 'recipe': recipe.id}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            recipe_favorite_serializer = RecipeInfoSerializer(recipe)
-            return Response(
-                data=recipe_favorite_serializer.data,
-                status=status.HTTP_201_CREATED,
-            )
-        recipe = get_object_or_404(Recipe, pk=pk)
-        try:
-            favorite = Favorite.objects.get(user=request.user, recipe=recipe)
-        except ObjectDoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        favorite.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return self.add_obj(FavoriteSerializer, request, pk)
+        return self.remove_obj(Favorite, request, pk)
 
     @action(
         ['GET'],

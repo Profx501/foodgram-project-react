@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+from django.conf import settings
 
 User = get_user_model()
 
@@ -67,12 +69,16 @@ class Recipe(models.Model):
         upload_to='recipe/images/'
     )
     text = models.TextField(verbose_name='Описание')
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         validators=(
             MinValueValidator(
-                1,
+                settings.COOKING_TIME_MIN,
                 message='Минимальное время приготовления 1 минута.',
+            ),
+            MaxValueValidator(
+                settings.COOKING_TIME_MAX,
+                message='Максимальное время приготовления 32000 минут.',
             ),
         )
     )
@@ -113,12 +119,16 @@ class RecipeIngredient(models.Model):
         related_name='ingredient',
         verbose_name='Ингредиент',
     )
-    amount = models.FloatField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='Кол-во',
         validators=(
             MinValueValidator(
-                0,
-                message='Минимальное количество ингредиентов 0!',
+                settings.AMOUNT_MIN,
+                message='Минимальное количество ингредиентов 1!',
+            ),
+            MaxValueValidator(
+                settings.AMOUNT_MAX,
+                message='Максимальное количество ингредиентов 32000!',
             ),
         )
 
@@ -127,6 +137,7 @@ class RecipeIngredient(models.Model):
     class Meta:
         verbose_name = 'Количество ингредиента'
         verbose_name_plural = 'Количество ингредиентов'
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.recipe} -> {self.ingredient}'
@@ -150,6 +161,7 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        ordering = ('id',)
         constraints = (
             models.UniqueConstraint(
                 fields=['user', 'following'],
