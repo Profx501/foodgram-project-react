@@ -17,18 +17,22 @@ def get_pdf(ingredient_list):
         )
     )
     p = canvas.Canvas(response)
-    p.setFont('Times', 25)
-    p.drawString(150, 800, 'Список Ингредиентов.')
-    y = 750
+    p.setFont('Times', settings.FONT)
+    p.drawString(
+        settings.STRING_TITLE_X,
+        settings.STRING_TITLE_Y,
+        'Список Ингредиентов.',
+    )
+    y = settings.STRING_CONTENT_Y
     for ingredient in ingredient_list:
         p.drawString(
-            50,
+            settings.STRING_CONTENT_X,
             y,
             f"{ingredient['total_amount']} "
             f"{ingredient['recipe__ingredients__measurement_unit']}.  "
             f"{ingredient['recipe__ingredients__name']};",
         )
-        y -= 25
+        y -= settings.LINE_OFFSET_CONTENT
     p.showPage()
     p.save()
     return response
